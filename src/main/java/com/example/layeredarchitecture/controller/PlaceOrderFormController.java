@@ -53,7 +53,7 @@ public class PlaceOrderFormController {
     private String orderId;
     CustomerDAO customerDAO = new CustomerDAOImpl();
     ItemDAO itemDAO = new ItemsDAOImpl();
-
+    OrderDAO orderDAO =new OrderDAOImpl();
     public void initialize() throws SQLException, ClassNotFoundException {
 
         tblOrderDetails.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("code"));
@@ -132,7 +132,6 @@ public class PlaceOrderFormController {
                     if (!existItem(newItemCode + "")) {
 //                        throw new NotFoundException("There is no such item associated with the id " + code);
                     }
-
                     ItemDTO item = itemDAO.findItem(newItemCode);
                     txtDescription.setText(item.getDescription());
                     txtUnitPrice.setText(item.getUnitPrice().setScale(2).toString());
@@ -188,11 +187,9 @@ public class PlaceOrderFormController {
 
     public String generateNewOrderId() {
         try {
-            Connection connection = DBConnection.getDbConnection().getConnection();
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT oid FROM `Orders` ORDER BY oid DESC LIMIT 1;");
+          OrderDAOImpl orderDAO = new OrderDAOImpl();
+          return orderDAO.generateOrderId();
 
-            return rst.next() ? String.format("OID-%03d", (Integer.parseInt(rst.getString("oid").replace("OID-", "")) + 1)) : "OID-001";
         } catch (SQLException e) {
             new Alert(Alert.AlertType.ERROR, "Failed to generate a new order id").show();
         } catch (ClassNotFoundException e) {
@@ -203,14 +200,11 @@ public class PlaceOrderFormController {
 
     private void loadAllCustomerIds() {
         try {
-            Connection connection = DBConnection.getDbConnection().getConnection();
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT * FROM Customer");
+            ArrayList<CustomerDTO> customerDTOS = customerDAO.getALlCustomer();
 
-            while (rst.next()) {
-                cmbCustomerId.getItems().add(rst.getString("id"));
+            for (CustomerDTO customer : customerDTOS) {
+                cmbCustomerId.getItems().add(customer.getId());
             }
-
         } catch (SQLException e) {
             new Alert(Alert.AlertType.ERROR, "Failed to load customer ids").show();
         } catch (ClassNotFoundException e) {
